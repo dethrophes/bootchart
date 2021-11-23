@@ -303,78 +303,81 @@ def render_charts(ctx, options, clip, trace, curr_y, w, h, sec_w):
 	draw_legend_box(ctx, "CPU (user+sys)", CPU_COLOR, off_x, curr_y+20, leg_s)
 	draw_legend_box(ctx, "I/O (wait)", IO_COLOR, off_x + 120, curr_y+20, leg_s)
 
-	# render I/O wait
-	chart_rect = (off_x, curr_y+30, w, bar_h)
-	if clip_visible (clip, chart_rect):
-		draw_box_ticks (ctx, chart_rect, sec_w)
-		draw_annotations (ctx, proc_tree, trace.times, chart_rect)
-		draw_chart (ctx, IO_COLOR, True, chart_rect, \
-			    [(sample.time, sample.user + sample.sys + sample.io) for sample in trace.cpu_stats], \
-			    proc_tree, None)
-		# render CPU load
-		draw_chart (ctx, CPU_COLOR, True, chart_rect, \
-			    [(sample.time, sample.user + sample.sys) for sample in trace.cpu_stats], \
-			    proc_tree, None)
+	if False:
+		# render I/O wait
+		chart_rect = (off_x, curr_y+30, w, bar_h)
+		if clip_visible (clip, chart_rect):
+			draw_box_ticks (ctx, chart_rect, sec_w)
+			draw_annotations (ctx, proc_tree, trace.times, chart_rect)
+			draw_chart (ctx, IO_COLOR, True, chart_rect, \
+				    [(sample.time, sample.user + sample.sys + sample.io) for sample in trace.cpu_stats], \
+				    proc_tree, None)
+			# render CPU load
+			draw_chart (ctx, CPU_COLOR, True, chart_rect, \
+				    [(sample.time, sample.user + sample.sys) for sample in trace.cpu_stats], \
+				    proc_tree, None)
 
-	curr_y = curr_y + 30 + bar_h
+		curr_y = curr_y + 30 + bar_h
 
-	# render second chart
-	draw_legend_line(ctx, "Disk throughput", DISK_TPUT_COLOR, off_x, curr_y+20, leg_s)
-	draw_legend_box(ctx, "Disk utilization", IO_COLOR, off_x + 120, curr_y+20, leg_s)
+	if False:
+		# render second chart
+		draw_legend_line(ctx, "Disk throughput", DISK_TPUT_COLOR, off_x, curr_y+20, leg_s)
+		draw_legend_box(ctx, "Disk utilization", IO_COLOR, off_x + 120, curr_y+20, leg_s)
 
-        # render I/O utilization
-	chart_rect = (off_x, curr_y+30, w, bar_h)
-	if clip_visible (clip, chart_rect):
-		draw_box_ticks (ctx, chart_rect, sec_w)
-		draw_annotations (ctx, proc_tree, trace.times, chart_rect)
-		draw_chart (ctx, IO_COLOR, True, chart_rect, \
-			    [(sample.time, sample.util) for sample in trace.disk_stats], \
-			    proc_tree, None)
+	        # render I/O utilization
+		chart_rect = (off_x, curr_y+30, w, bar_h)
+		if clip_visible (clip, chart_rect):
+			draw_box_ticks (ctx, chart_rect, sec_w)
+			draw_annotations (ctx, proc_tree, trace.times, chart_rect)
+			draw_chart (ctx, IO_COLOR, True, chart_rect, \
+				    [(sample.time, sample.util) for sample in trace.disk_stats], \
+				    proc_tree, None)
 
-	# render disk throughput
-	max_sample = max (trace.disk_stats, key = lambda s: s.tput)
-	if clip_visible (clip, chart_rect):
-		draw_chart (ctx, DISK_TPUT_COLOR, False, chart_rect, \
-			    [(sample.time, sample.tput) for sample in trace.disk_stats], \
-			    proc_tree, None)
+		# render disk throughput
+		max_sample = max (trace.disk_stats, key = lambda s: s.tput)
+		if clip_visible (clip, chart_rect):
+			draw_chart (ctx, DISK_TPUT_COLOR, False, chart_rect, \
+				    [(sample.time, sample.tput) for sample in trace.disk_stats], \
+				    proc_tree, None)
 
-	pos_x = off_x + ((max_sample.time - proc_tree.start_time) * w / proc_tree.duration)
+		pos_x = off_x + ((max_sample.time - proc_tree.start_time) * w / proc_tree.duration)
 
-	shift_x, shift_y = -20, 20
-	if (pos_x < off_x + 245):
-		shift_x, shift_y = 5, 40
+		shift_x, shift_y = -20, 20
+		if (pos_x < off_x + 245):
+			shift_x, shift_y = 5, 40
 
-	label = "%dMB/s" % round ((max_sample.tput) / 1024.0)
-	draw_text (ctx, label, DISK_TPUT_COLOR, pos_x + shift_x, curr_y + shift_y)
+		label = "%dMB/s" % round ((max_sample.tput) / 1024.0)
+		draw_text (ctx, label, DISK_TPUT_COLOR, pos_x + shift_x, curr_y + shift_y)
 
-	curr_y = curr_y + 30 + bar_h
+		curr_y = curr_y + 30 + bar_h
 
-	# render mem usage
-	chart_rect = (off_x, curr_y+30, w, meminfo_bar_h)
-	mem_stats = trace.mem_stats
-	if mem_stats and clip_visible (clip, chart_rect):
-		mem_scale = max(sample.records['MemTotal'] - sample.records['MemFree'] for sample in mem_stats)
-		draw_legend_box(ctx, "Mem cached (scale: %u MiB)" % (float(mem_scale) / 1024), MEM_CACHED_COLOR, off_x, curr_y+20, leg_s)
-		draw_legend_box(ctx, "Used", MEM_USED_COLOR, off_x + 240, curr_y+20, leg_s)
-		draw_legend_box(ctx, "Buffers", MEM_BUFFERS_COLOR, off_x + 360, curr_y+20, leg_s)
-		draw_legend_line(ctx, "Swap (scale: %u MiB)" % max([(sample.records['SwapTotal'] - sample.records['SwapFree'])/1024 for sample in mem_stats]), \
-				 MEM_SWAP_COLOR, off_x + 480, curr_y+20, leg_s)
-		draw_box_ticks(ctx, chart_rect, sec_w)
-		draw_annotations(ctx, proc_tree, trace.times, chart_rect)
-		draw_chart(ctx, MEM_BUFFERS_COLOR, True, chart_rect, \
-			   [(sample.time, sample.records['MemTotal'] - sample.records['MemFree']) for sample in trace.mem_stats], \
-			   proc_tree, [0, mem_scale])
-		draw_chart(ctx, MEM_USED_COLOR, True, chart_rect, \
-			   [(sample.time, sample.records['MemTotal'] - sample.records['MemFree'] - sample.records['Buffers']) for sample in mem_stats], \
-			   proc_tree, [0, mem_scale])
-		draw_chart(ctx, MEM_CACHED_COLOR, True, chart_rect, \
-			   [(sample.time, sample.records['Cached']) for sample in mem_stats], \
-			   proc_tree, [0, mem_scale])
-		draw_chart(ctx, MEM_SWAP_COLOR, False, chart_rect, \
-			   [(sample.time, float(sample.records['SwapTotal'] - sample.records['SwapFree'])) for sample in mem_stats], \
-			   proc_tree, None)
+		# render mem usage
+	if False:
+		chart_rect = (off_x, curr_y+30, w, meminfo_bar_h)
+		mem_stats = trace.mem_stats
+		if mem_stats and clip_visible (clip, chart_rect):
+			mem_scale = max(sample.records['MemTotal'] - sample.records['MemFree'] for sample in mem_stats)
+			draw_legend_box(ctx, "Mem cached (scale: %u MiB)" % (float(mem_scale) / 1024), MEM_CACHED_COLOR, off_x, curr_y+20, leg_s)
+			draw_legend_box(ctx, "Used", MEM_USED_COLOR, off_x + 240, curr_y+20, leg_s)
+			draw_legend_box(ctx, "Buffers", MEM_BUFFERS_COLOR, off_x + 360, curr_y+20, leg_s)
+			draw_legend_line(ctx, "Swap (scale: %u MiB)" % max([(sample.records['SwapTotal'] - sample.records['SwapFree'])/1024 for sample in mem_stats]), \
+					 MEM_SWAP_COLOR, off_x + 480, curr_y+20, leg_s)
+			draw_box_ticks(ctx, chart_rect, sec_w)
+			draw_annotations(ctx, proc_tree, trace.times, chart_rect)
+			draw_chart(ctx, MEM_BUFFERS_COLOR, True, chart_rect, \
+				   [(sample.time, sample.records['MemTotal'] - sample.records['MemFree']) for sample in trace.mem_stats], \
+				   proc_tree, [0, mem_scale])
+			draw_chart(ctx, MEM_USED_COLOR, True, chart_rect, \
+				   [(sample.time, sample.records['MemTotal'] - sample.records['MemFree'] - sample.records['Buffers']) for sample in mem_stats], \
+				   proc_tree, [0, mem_scale])
+			draw_chart(ctx, MEM_CACHED_COLOR, True, chart_rect, \
+				   [(sample.time, sample.records['Cached']) for sample in mem_stats], \
+				   proc_tree, [0, mem_scale])
+			draw_chart(ctx, MEM_SWAP_COLOR, False, chart_rect, \
+				   [(sample.time, float(sample.records['SwapTotal'] - sample.records['SwapFree'])) for sample in mem_stats], \
+				   proc_tree, None)
 
-		curr_y = curr_y + meminfo_bar_h
+			curr_y = curr_y + meminfo_bar_h
 
 	return curr_y
 
@@ -508,7 +511,7 @@ def draw_processes_recursively(ctx, proc, proc_tree, y, proc_h, rect, clip) :
 		cmdString = proc.cmd
 	else:
 		cmdString = ''
-	if (OPTIONS.show_pid or OPTIONS.show_all) and ipid is not 0:
+	if (OPTIONS.show_pid or OPTIONS.show_all) and ipid != 0:
 		cmdString = cmdString + " [" + str(ipid // 1000) + "]"
 	if OPTIONS.show_all:
 		if proc.args:
@@ -606,7 +609,7 @@ class CumlSample:
 		if self.color is None:
 			i = self.next() % HSV_MAX_MOD
 			h = 0.0
-			if i is not 0:
+			if i != 0:
 				h = (1.0 * i) / HSV_MAX_MOD
 			s = 0.5
 			v = 1.0

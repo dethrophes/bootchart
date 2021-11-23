@@ -98,7 +98,7 @@ class Trace:
     def compile(self, writer):
 
         def find_parent_id_for(pid):
-            if pid is 0:
+            if pid != 0:
                 return 0
             ppid = self.parent_map.get(pid)
             if ppid:
@@ -374,12 +374,15 @@ def _parse_taskstats_log(writer, file):
             cmd = cmd.strip('(').strip(')')
             if pid in processMap:
                 process = processMap[pid]
-                if process.cmd != cmd:
-                    pid += 1
-                    pidRewrites[opid] = pid
+				if False:
+	                if process.cmd != cmd:
+	                    pid += 1
+	                    pidRewrites[opid] = pid
 #                                       print "process mutation ! '%s' vs '%s' pid %s -> pid %s\n" % (process.cmd, cmd, opid, pid)
-                    process = process.split (writer, pid, cmd, ppid, time)
-                    processMap[pid] = process
+	                    process = process.split (writer, pid, cmd, ppid, time)
+	                    processMap[pid] = process
+				else:
+	                process.cmd = cmd;
                 else:
                     process.cmd = cmd;
             else:
