@@ -22,12 +22,13 @@ class DiskStatSample:
         self.diskdata = [ a + b for a, b in zip(self.diskdata, new_diskdata) ]
 
 class CPUSample:
-    def __init__(self, time, user, sys, io = 0.0, swap = 0.0):
+    def __init__(self, time, user, sys, io = 0.0, swap = 0.0, percentage=None):
         self.time = time
         self.user = user
         self.sys = sys
         self.io = io
         self.swap = swap
+        self.percentage = percentage
 
     @property
     def cpu(self):
@@ -35,7 +36,8 @@ class CPUSample:
 
     def __str__(self):
         return str(self.time) + "\t" + str(self.user) + "\t" + \
-               str(self.sys) + "\t" + str(self.io) + "\t" + str (self.swap)
+               str(self.sys) + "\t" + str(self.io) + "\t" + str (self.swap) \
+			    + "\t" + str (self.percentage)
 
 class MemSample:
     used_values = ('MemTotal', 'MemFree', 'Buffers', 'Cached', 'SwapTotal', 'SwapFree',)

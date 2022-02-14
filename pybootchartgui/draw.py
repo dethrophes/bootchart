@@ -274,7 +274,7 @@ sec_w_base = 50 # the width of a second
 proc_h = 16 # the height of a process
 leg_s = 10
 MIN_IMG_W = 800
-CUML_HEIGHT = 2000 # Increased value to accomodate CPU and I/O Graphs
+CUML_HEIGHT = 4000 # Increased value to accomodate CPU and I/O Graphs
 OPTIONS = None
 
 def extents(options, xscale, trace):
@@ -557,6 +557,12 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 
 		last_tx = tx + tw
 		state = get_proc_state( sample.state )
+		if sample.cpu_sample.percentage is None:
+                    c_h = proc_h
+                    c_y = y
+		else:
+                    c_h = math.ceil(proc_h / 2 * sample.cpu_sample.percentage / 100) * 2
+                    c_y = y + proc_h - c_h
 
 		color = STATE_COLORS[state]
 		if state == STATE_RUNNING:
@@ -566,7 +572,7 @@ def draw_process_activity_colors(ctx, proc, proc_tree, x, y, w, proc_h, rect, cl
 		elif state == STATE_SLEEPING:
 			continue
 
-		draw_fill_rect(ctx, color, (tx, y, tw, proc_h))
+		draw_fill_rect(ctx, color, (tx, c_y, tw, c_h))
 
 def draw_process_connecting_lines(ctx, px, py, x, y, proc_h):
 	ctx.set_source_rgba(*DEP_COLOR)
@@ -757,7 +763,7 @@ def draw_cuml_graph(ctx, proc_tree, chart_bounds, duration, sec_w, stat_type):
 
 	# Render legends
 	font_height = 20
-	label_width = 300
+	label_width = 500
 	LEGENDS_PER_COL = 15
 	LEGENDS_TOTAL = 45
 	ctx.set_font_size (TITLE_FONT_SIZE)
