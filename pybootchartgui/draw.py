@@ -167,7 +167,8 @@ def draw_legend_line(ctx, label, fill_color, x, y, s):
 
 def draw_label_in_box(ctx, color, label, x, y, w, maxx):
 	label_w = ctx.text_extents(label)[2]
-	label_x = x + w / 2 - label_w / 2
+	#label_x = x + w / 2 - label_w / 2 # center
+	label_x = x + 10 # left align
 	if label_w + 10 > w:
 		label_x = x + w + 5
 	if label_x + label_w > maxx:

@@ -334,7 +334,7 @@ def _parse_proc_ps_log(writer, file):
 
     return ProcessStats (writer, processMap, timed_blocks_count, avgSampleLength, startTime, ltime)
 
-def _parse_taskstats_log(writer, file):
+def _parse_taskstats_log(writer, file, numCpu):
     """
      * See bootchart-collector.c for details.
      *
@@ -410,7 +410,7 @@ def _parse_taskstats_log(writer, file):
                 cpuSample = CPUSample('null', delta_cpu_ns, 0.0,
                                       delta_blkio_delay_ns,
                                       delta_swapin_delay_ns,
-									  int((delta_cpu_ns * 100 / (timedelta * 10 * 1000 * 1000)) + 0.9 ))
+									  int((delta_cpu_ns * 100 / (timedelta * numCpu * 10 * 1000 * 1000)) + 0.9 ))
                 #print("proc %50s cpu_ns %g\t  delta_cpu %g\t time:%s\t cpuSample:%s" % (cmd, cpu_ns, delta_cpu_ns, str(time), str(cpuSample)))
                 process.samples.append(ProcessSample(time, state, cpuSample))
 
@@ -674,7 +674,7 @@ def _do_parse(writer, state, name, file):
     elif name == "proc_diskstats.log":
         state.disk_stats = _parse_proc_disk_stat_log(file, get_num_cpus(state.headers))
     elif name == "taskstats.log":
-        state.ps_stats = _parse_taskstats_log(writer, file)
+        state.ps_stats = _parse_taskstats_log(writer, file, get_num_cpus(state.headers))
         state.taskstats = True
     elif name == "proc_stat.log":
         state.cpu_stats = _parse_proc_stat_log(file)
